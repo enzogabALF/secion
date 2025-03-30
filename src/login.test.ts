@@ -1,77 +1,81 @@
 import { LoginAutomation } from './login';
-import { chromium } from 'playwright';
+import * as dotenv from 'dotenv';
+import path from 'path';
 
-// Mock de las variables de entorno
-process.env.USER = '42097862';
-process.env.PASSWORD = '9441';
+// Cargar variables de entorno desde .env
+dotenv.config({ path: path.resolve(__dirname, '../utils/iniciodesecion.env') });
 
-// Mock de playwright
-jest.mock('playwright', () => ({
-    chromium: {
-        launch: jest.fn().mockResolvedValue({
-            newContext: jest.fn().mockResolvedValue({
-                newPage: jest.fn().mockResolvedValue({
-                    goto: jest.fn().mockResolvedValue(null),
-                    fill: jest.fn().mockResolvedValue(null),
-                    click: jest.fn().mockResolvedValue(null),
-                    waitForSelector: jest.fn().mockResolvedValue({
-                        textContent: jest.fn().mockResolvedValue('Alfonso, Enzo Gabriel - Ingeniería en Sistemas de Información')
-                    })
-                })
-            }),
-            close: jest.fn().mockResolvedValue(null)
-        })
+test('Debería retornar true cuando se logra ingresar a Inasistencias', async () => {
+    const automation = new LoginAutomation();
+
+    try {
+        await automation.launchBrowser();
+        await automation.navigateToLoginPage(
+            'https://sistemacuenca.ucp.edu.ar/alumnosnotas/Default.aspx?ReturnUrl=%2falumnosnotas%2fProteccion%2fInscripcionesExamenes.aspx%3fSel%3d2&Sel=2'
+        );
+        await automation.performLogin();
+        await automation.validateLoginSuccess();
+
+        const result = await automation.abrirPanelCursado('a[href="Inasistencias.aspx?Sel=1"]');
+
+        // Validar que el resultado sea true
+        expect(result).toBe(true);
+    } finally {
+        await automation.closeBrowser();
     }
-}));
+});
+test('Debería retornar true cuando se logra iniciar sesión', async () => {
+    const automation = new LoginAutomation();
 
-describe('LoginAutomation', () => {
-    let loginAutomation: LoginAutomation;
-
-    beforeEach(() => {
-        loginAutomation = new LoginAutomation();
-    });
-
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
-
-    test('debe inicializar correctamente con las credenciales', () => {
-        expect(loginAutomation).toBeDefined();
-    });
-
-    test('debe lanzar el navegador correctamente', async () => {
-        await loginAutomation.launchBrowser();
-        expect(chromium.launch).toHaveBeenCalledWith({
-            headless: false,
-            channel: 'chrome'
-        });
-    });
-
-    test('debe navegar a la página de inicio de sesión', async () => {
-        await loginAutomation.launchBrowser();
-        const url = 'https://sistemacuenca.ucp.edu.ar/alumnosnotas/Default.aspx?ReturnUrl=%2falumnosnotas%2fProteccion%2fInscripcionesExamenes.aspx%3fSel%3d2&Sel=2';
-        await loginAutomation.navigateToLoginPage(url);
-        // Verificar que se llamó a goto con la URL correcta
-        expect(loginAutomation['page']?.goto).toHaveBeenCalledWith(url);
-    });
-
-    test('debe realizar el login correctamente', async () => {
-        await loginAutomation.launchBrowser();
-        await loginAutomation.performLogin();
-        
-        // Verificar que se llamaron los métodos fill con los valores correctos
-        expect(loginAutomation['page']?.fill).toHaveBeenCalledWith(
-            'input[name="ctl00$ContentPlaceHolder1$TextBox1"]',
-            '42097862'
+    try {
+        await automation.launchBrowser();
+        await automation.navigateToLoginPage(
+            'https://sistemacuenca.ucp.edu.ar/alumnosnotas/Default.aspx?ReturnUrl=%2falumnosnotas%2fProteccion%2fInscripcionesExamenes.aspx%3fSel%3d2&Sel=2'
         );
-        expect(loginAutomation['page']?.fill).toHaveBeenCalledWith(
-            'input[name="ctl00$ContentPlaceHolder1$Clave"]',
-            '9441'
-        );
-    });
+        await automation.performLogin();
+        await automation.validateLoginSuccess();
 
-    test('debe validar el login exitoso', async () => {
-        await loginAutomation.launchBrowser();
-        await expect(loginAutomation.validateLoginSuccess()).resolves.not.toThrow();
-    });
-}); 
+        // Si no lanza errores, el inicio de sesión fue exitoso
+        expect(true).toBe(true);
+    } finally {
+        await automation.closeBrowser();
+    }
+});
+
+test('Debería retornar true cuando se abre el panel de cursado después de iniciar sesión', async () => {
+    const automation = new LoginAutomation();
+
+    try {
+        await automation.launchBrowser();
+        await automation.navigateToLoginPage(
+            'https://sistemacuenca.ucp.edu.ar/alumnosnotas/Default.aspx?ReturnUrl=%2falumnosnotas%2fProteccion%2fInscripcionesExamenes.aspx%3fSel%3d2&Sel=2'
+        );
+        await automation.performLogin();
+        await automation.validateLoginSuccess();
+        await automation.abrirPanelCursado('#ctl00_PanelCursado_header');
+
+        // Si no lanza errores, el panel de cursado fue abierto exitosamente
+        expect(true).toBe(true);
+    } finally {
+        await automation.closeBrowser();
+    }
+});
+
+test('Debería retornar true cuando se navega a Inasistencias después de abrir el panel de cursado', async () => {
+    const automation = new LoginAutomation();
+
+    try {
+        await automation.launchBrowser();
+        await automation.navigateToLoginPage(
+            'https://sistemacuenca.ucp.edu.ar/alumnosnotas/Default.aspx?ReturnUrl=%2falumnosnotas%2fProteccion%2fInscripcionesExamenes.aspx%3fSel%3d2&Sel=2'
+        );
+        await automation.performLogin();
+        await automation.validateLoginSuccess();
+        await automation.abrirPanelCursado('a[href="Inasistencias.aspx?Sel=1"]');
+
+        // Si no lanza errores, la navegación a Inasistencias fue exitosa
+        expect(true).toBe(true);
+    } finally {
+        await automation.closeBrowser();
+    }
+});
