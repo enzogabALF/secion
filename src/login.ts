@@ -104,65 +104,48 @@ export class LoginAutomation {
     }
 
     // Método para abrir el panel de cursado y navegar a Inasistencias
-    async abrirPanelCursado(panelElem: string): Promise<void> {
-    if (!this.page) {
-        throw new Error('La página no está inicializada.');
-    }
-
-    try {
-        console.log('Intentando abrir el panel de cursado...');
-        
-        // Esperar a que la página esté completamente cargada
-        await this.page.waitForLoadState('networkidle');
-
-        const panelSelector = '#ctl00_PanelCursado_header';
-
-        // Interactuar con el panel de cursado
-        const panelElement = await this.page.waitForSelector(panelSelector, {
-            state: 'visible',
-            timeout: 5000,
-        });
-
-        if (panelElement) {
-            await panelElement.click({ force: true });
-            console.log('Panel de cursado clickeado exitosamente');
-
-            // Esperar a que el panel se expanda
-            await this.page.waitForTimeout(3000);
-
-            // Navegar al enlace proporcionado
-            await this.page.click(panelElem);
-            console.log('Enlace de Inasistencias clickeado exitosamente');
-
-            // Esperar a que la nueva página cargue completamente
-            await this.page.waitForLoadState('networkidle');
-
-            // Validar el texto dentro del ID especificado
-            const updatePanelSelector = '#ctl00_ContentPlaceHolder1_UpdatePanel1';
-            const updatePanelElement = await this.page.waitForSelector(updatePanelSelector, { timeout: 5000 });
-
-            if (updatePanelElement) {
-                const textContent = await updatePanelElement.textContent();
-
-                if (textContent?.includes('Materias cursando en cuatrimestre actual')) {
-                    console.log('Texto verificado: Materias cursando en cuatrimestre actual.');
-                } else {
-                    throw new Error('El texto esperado no se encuentra dentro del panel.');
-                }
-            } else {
-                throw new Error(`No se pudo encontrar el panel con ID: ${updatePanelSelector}`);
-            }
-        } else {
-            throw new Error('No se pudo encontrar el panel de cursado.');
+    async abrirPanelCursado(panelElem: string): Promise<boolean> {
+        if (!this.page) {
+            throw new Error('La página no está inicializada.');
         }
-    } catch (error) {
-        console.error('Error en el proceso:', error);
-        throw error;
-    }
-}
-
-
     
+        try {
+            console.log('Intentando abrir el panel de cursado...');
+            
+            // Esperar a que la página esté completamente cargada
+            await this.page.waitForLoadState('networkidle');
+    
+            const panelSelector = '#ctl00_PanelCursado_header';
+    
+            // Esperar a que el panel de cursado esté visible
+            const panelElement = await this.page.waitForSelector(panelSelector, {
+                state: 'visible',
+                timeout: 10000, // Aumentar el tiempo de espera a 10 segundos
+            });
+    
+            if (panelElement) {
+                await panelElement.click({ force: true });
+                console.log('Panel de cursado clickeado exitosamente');
+    
+                // Esperar a que el panel se expanda
+                await this.page.waitForTimeout(3000);
+    
+                // Navegar al enlace proporcionado
+                await this.page.click(panelElem);
+                console.log('Enlace de Inasistencias clickeado exitosamente');
+    
+                // Esperar a que la nueva página cargue completamente
+                await this.page.waitForLoadState('networkidle');
+    
+                return true; // Retorna true si todo fue exitoso
+            } else {
+                throw new Error('No se pudo encontrar el panel de cursado.');
+            }
+        } catch (error) {
+            console.error('Error en el proceso de abrir el panel de cursado:', error);
+            throw error;
+        }
+    }
 }
 
 // ===============================================
